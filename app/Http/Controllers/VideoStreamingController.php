@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Video;
 use Illuminate\Contracts\Filesystem\FileNotFoundException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -9,6 +10,7 @@ use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 use Exception;
+use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\Response;
 
 class VideoStreamingController extends Controller
@@ -45,7 +47,13 @@ class VideoStreamingController extends Controller
         try {
             $file = $request->file('video');
             $path = Storage::disk('public')->path("video/{$file->getClientOriginalName()}");
+            $pathinfo = pathinfo($path);
             if ($request->has('completed') && $request->boolean('completed')) {
+                $video = new Video();
+                $video->name = $pathinfo['filename'];
+                $video->full_name = $pathinfo['basename'];
+                $video->uid = Str::random(20);
+                $video->save();
                 return response()->json(['uploaded' => true]);
             }
 
