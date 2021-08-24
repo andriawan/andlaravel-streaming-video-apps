@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 use Exception;
 use Illuminate\Support\Str;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\Response;
 
 class VideoStreamingController extends Controller
@@ -57,9 +58,9 @@ class VideoStreamingController extends Controller
                 return response()->json(['uploaded' => true]);
             }
 
-            if(File::exists($path)){
+            if (File::exists($path)) {
                 File::append($path, $file->get());
-            }else{
+            } else {
                 File::put($path, $file->get());
             }
 
@@ -67,6 +68,46 @@ class VideoStreamingController extends Controller
 
         } catch (Exception $e) {
             return response()->json(['uploaded' => false, 'message' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    public function fileVideo($uid)
+    {
+        try {
+            $video = Video::where('uid', $uid)->first();
+            if (is_null($video)) throw new Exception("Video Data Not Found");
+
+            $path = Storage::disk('public')->path("video/{$video->full_name}");
+            if (!File::exists($path)) throw new Exception("File Video Not Found");
+            return response()->file($path);
+
+        } catch (Exception $e) {
+            return response()->json([
+                "message" => $e->getMessage()
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    public function streamVideo($uid)
+    {
+        try {
+            $video = Video::where('uid', $uid)->first();
+            if (is_null($video)) throw new Exception("Video Data Not Found");
+
+            $path = Storage::disk('public')->path("video/{$video->full_name}");
+            if (!File::exists($path)) throw new Exception("File Video Not Found");
+            $response = new BinaryFileResponse($path, 200, [
+                'Content-Type' => 'video/mp4',
+            ]);
+            $response->setContentDisposition('attachment', $video->name,
+                str_replace('%', '', Str::ascii($video->name)));
+
+            return $response;
+
+        } catch (Exception $e) {
+            return response()->json([
+                "message" => $e->getMessage()
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
 

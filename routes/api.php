@@ -15,3 +15,5 @@ use App\Http\Controllers\VideoStreamingController;
 */
 
 Route::resource("video", VideoStreamingController::class);
+Route::get("stream/{uid}", [VideoStreamingController::class, 'streamVideo']);
+Route::get("download/{uid}", [VideoStreamingController::class, 'fileVideo']);
