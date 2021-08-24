@@ -18,7 +18,8 @@ fileUploadElement.change(function (event) {
 
 function sendChunkFile(data) {
     let form = new FormData()
-    form.append("video", new File([data.reader.result], "uploaded_video"))
+    form.append("video", new File([data.reader.result],
+        data.fileUploadElement.get(0).files[0].name))
     $.ajax({
         type: "POST",
         data: form,
@@ -28,7 +29,6 @@ function sendChunkFile(data) {
         success: function () {
             if (data.loaded < data.files.size) {
                 data.loaded += data.chunkSize;
-                console.log("dt", data);
                 let valueProgress = Math.round((data.loaded / data.files.size) * 100);
                 if (valueProgress > 100) valueProgress = 100;
                 data.progressBarUpload
@@ -38,12 +38,37 @@ function sendChunkFile(data) {
                 data.blob = data.files.slice(data.loaded, data.loaded + data.chunkSize);
                 data.reader.readAsArrayBuffer(data.blob);
             } else {
-                data.successMessage.removeClass("d-none").text("Upload File Success!");
-                data.progressBarUpload.addClass("d-none");
-                data.buttonUploadElement.prop("disabled", false);
-                data.fileUploadElement.prop("disabled", false).val('');
-                data.labelFileName.text("");
+                let formFinal = new FormData()
+                formFinal.append("completed", "true");
+                formFinal.append("video", new File([data.reader.result],
+                    data.fileUploadElement.get(0).files[0].name))
+                $.ajax({
+                    type: "POST",
+                    data: formFinal,
+                    contentType: false,
+                    processData: false,
+                    url: "/api/video",
+                    success: function () {
+                        data.successMessage.removeClass("d-none").text("Upload File Success!");
+                        data.progressBarUpload.addClass("d-none");
+                        data.buttonUploadElement.prop("disabled", false);
+                        data.fileUploadElement.prop("disabled", false).val('');
+                        data.labelFileName.text("");
+                    },
+                    error: function (response) {
+                        data.errorMessage.removeClass("d-none").text(`${response.responseJSON.message}`);
+                        data.buttonUploadElement.prop("disabled", false);
+                        data.fileUploadElement.prop("disabled", false)
+                        data.progressBarUpload.addClass("d-none");
+                    }
+                });
             }
+        },
+        error: function (response) {
+            data.errorMessage.removeClass("d-none").text(`${response.responseJSON.message}`);
+            data.buttonUploadElement.prop("disabled", false);
+            data.fileUploadElement.prop("disabled", false)
+            data.progressBarUpload.addClass("d-none");
         }
     })
 
@@ -55,7 +80,7 @@ buttonUploadElement.click(function () {
     let data = {
         loaded: 0,
         reader: new FileReader(),
-        chunkSize: 1048576,
+        chunkSize: 10485760,
         errorMessage,
         successMessage,
         progressBarUpload,
