@@ -49,6 +49,7 @@ function sendChunkFile(data) {
                     processData: false,
                     url: "/api/video",
                     success: function () {
+                        data.Livewire.emit("uploadSuccess")
                         data.successMessage.removeClass("d-none").text("Upload File Success!");
                         data.progressBarUpload.addClass("d-none");
                         data.buttonUploadElement.prop("disabled", false);
@@ -82,6 +83,7 @@ buttonUploadElement.click(function () {
         reader: new FileReader(),
         chunkSize: 10485760,
         errorMessage,
+        Livewire: window.Livewire,
         successMessage,
         progressBarUpload,
         fileUploadElement,

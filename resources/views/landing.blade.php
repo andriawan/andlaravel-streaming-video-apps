@@ -7,6 +7,7 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>And Video Streaming Simple Apps</title>
     <link rel="stylesheet" href={{ mix('css/app.css') }}>
+    @livewireStyles
 </head>
 <body>
     <div class="container mt-4">
@@ -32,6 +33,8 @@
             </div>
         </div>
     </div>
+    <div>@livewire('show-video-lists')</div>
     <script src="{{ mix('js/app.js') }}"></script>
+    @livewireScripts
 </body>
 </html>
